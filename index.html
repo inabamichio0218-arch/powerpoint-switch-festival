@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>かっこいいスイッチをつくろう | 作品展示</title><style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:'Yu Gothic','Hiragino Kaku Gothic ProN','Meiryo',system-ui,sans-serif;background:#030d28;color:#fff}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:4px solid #ffde57;outline-offset:3px}
+.stage{position:absolute;inset:0;display:grid;place-items:center}
+.screen{position:relative;width:min(100vw,177.77778vh);height:min(100vh,56.25vw);overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#174d9b 0%,#092d68 38%,#071a46 75%,#071638 100%);box-shadow:0 0 75px #000}
+.screen:before{content:'';pointer-events:none;position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 2px),radial-gradient(#f6ed81 1px,transparent 2px);background-size:9.9% 23%,16% 32%;background-position:2% 5%,8% 21%;opacity:.37}
+.menu,.viewer{position:absolute;inset:0}.menu{display:flex;flex-direction:column;padding:1.5% 3.5% 1%;gap:1.6%}
+.heading{height:24%;display:flex;align-items:center;justify-content:space-between;gap:3%;z-index:1}
+.head-title{min-width:0;flex:1;text-align:center}
+.eyebrow{font-size:clamp(10px,1.7vw,28px);color:#ffe96a;font-weight:900;letter-spacing:.18em;text-shadow:0 2px 5px #001}
+.head-title h1{font-size:clamp(18px,3.65vw,66px);margin:0;line-height:1.22;font-weight:1000;letter-spacing:.01em;white-space:nowrap;text-shadow:0 .07em 0 #14346e,0 .13em .23em #001}
+.head-title p{font-size:clamp(10px,1.3vw,22px);font-weight:bold;margin:.3em 0 0;color:#d8ebff}
+.header-switch{flex:none;width:27%;height:72%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 10px 14px #001a)}
+/* つまみの縦横サイズと移動距離は実際の表示サイズから JS が設定する */
+.switch-track{position:relative;width:100%;height:100%;border-radius:999px;border:.7vw solid #f8f8ff;background:linear-gradient(180deg,#f34a58,#e33f4d);box-shadow:0 .5vw 0 #9aa5b4,inset 0 .18vw 0 #ffffff88,inset 0 -.18vw .35vw #00000020;overflow:hidden;transition:background 2s ease-in-out;--knob-size:60px;--travel:0px;--inset:5px}
+.switch-track.auto-on{background:linear-gradient(180deg,#5ccc8d,#41ba79)}
+.switch-label{position:absolute;top:50%;transform:translateY(-50%);font-size:clamp(18px,2.6vw,44px);font-weight:1000;color:#fff;text-shadow:0 2px 3px #00000025;line-height:1;z-index:1;pointer-events:none}
+.label-left{left:25%;display:none}.label-right{right:19%;display:block}
+.switch-track.auto-on .label-left{display:block}
+.switch-track.auto-on .label-right{display:none}
+/* 移動中はどちらの文字も表示しない。到着したら目的の文字だけ現れる */
+.switch-track.moving .switch-label{display:none!important}
+.decor-knob{position:absolute;top:50%;left:var(--inset);width:var(--knob-size);height:var(--knob-size);aspect-ratio:1/1;transform:translateY(-50%) translateX(0);border-radius:50%;background:linear-gradient(145deg,#fdfdfd,#c1c9d1);box-shadow:0 0 0 .24vw #a5adb7,0 .18vw .44vw #21344f;transition:transform 2s ease-in-out;z-index:2;will-change:transform}
+.switch-track.auto-on .decor-knob{transform:translateY(-50%) translateX(var(--travel))}
+.switch-track.no-animation,.switch-track.no-animation .decor-knob{transition:none!important}
+.bodygrid{height:71%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:2.5% 3.2%;position:relative;z-index:1}
+.grade-card{border-radius:1.1vw;padding:2% 4%;display:flex;flex-direction:column;min-height:0;background:linear-gradient(155deg,#225b9f88,#12275eaf);border:2px solid #6eb8ff7a;box-shadow:0 .3vw .65vw #0005,inset 0 1px 0 #fff2}
+.grade-head{margin:0 auto 3%;width:100%;text-align:center;border-radius:.65vw;font-size:clamp(14px,2.45vw,42px);font-weight:1000;line-height:1.16;padding:1.1% 0;color:#10264b;background:linear-gradient(#fff,#d9e7ff);box-shadow:0 .23vw 0 #7b9bbc}
+.grade-card:nth-child(2) .grade-head,.grade-card:nth-child(5) .grade-head{background:linear-gradient(#fff,#e3f7ed)}
+.grade-card:nth-child(3) .grade-head,.grade-card:nth-child(6) .grade-head{background:linear-gradient(#fff,#fff0c3)}
+.names{flex:1;display:flex;flex-wrap:wrap;justify-content:center;align-content:center;align-items:center;gap:4% 2.7%}
+.student{border:2px solid #b5d7ff;border-radius:.75vw;background:linear-gradient(180deg,#2083dd,#1150a7);color:#fff;font-weight:900;font-size:clamp(13px,2.18vw,36px);padding:1.8% 5%;min-width:25%;line-height:1.4;white-space:nowrap;box-shadow:0 .18vw 0 #092450,0 .3vw .5vw #0005;text-shadow:0 2px 0 #093573}
+.student:hover{background:linear-gradient(#49baff,#1c70d7);transform:translateY(-2px)}
+.grade-card:nth-child(3) .student,.grade-card:nth-child(6) .student{font-size:clamp(12px,1.92vw,32px);padding:1.6% 3.5%}
+.footer{position:absolute;bottom:.55%;left:0;right:0;text-align:center;color:#b7d6ff;font-size:clamp(8px,.85vw,15px);z-index:1}
+.viewer{display:none;background:#000}.viewer.active{display:block}.art{position:absolute;inset:0;background:#000;overflow:hidden}.art img{width:100%;height:100%;position:absolute;inset:0;object-fit:fill;user-select:none;-webkit-user-drag:none}
+.on-img{opacity:0;transition:opacity 2s ease-in-out}.viewer.on .on-img{opacity:1}
+.work-toggle{position:absolute;right:3.2%;top:3%;bottom:auto;width:28%;height:12%;border:none;background:transparent;cursor:pointer;z-index:5;touch-action:manipulation;padding:0}
+.work-toggle .switch-track{display:block;position:relative;width:100%;height:100%;border-width:.55vw;box-shadow:0 .45vw .8vw #0009,inset 0 .14vw 0 #ffffff88,inset 0 -.18vw .35vw #00000020;transition:background 2s ease-in-out}
+.work-toggle .switch-label{font-size:clamp(16px,3vw,52px)}
+.work-toggle .label-left{left:28%}.work-toggle .label-right{right:19%}
+.work-toggle .decor-knob{box-shadow:0 0 0 .27vw #a8abb2,0 .18vw .4vw #111a}
+.back{position:absolute;left:2%;top:2.5%;z-index:8;border:2px solid #ffffffad;border-radius:100px;background:#092853e8;color:white;font-size:clamp(12px,1.75vw,30px);font-weight:900;padding:.55% 2%;box-shadow:0 .15vw .65vw #0009}.back:hover{background:#2269b5}
+.art-label{position:absolute;bottom:2%;left:2.5%;font-weight:bold;font-size:clamp(12px,1.5vw,25px);text-shadow:0 2px 8px #000,0 2px 8px #000;z-index:3;pointer-events:none}
+.hint{position:absolute;right:4.2%;bottom:1%;font-size:clamp(9px,1.05vw,17px);text-shadow:0 2px 6px #000;z-index:4;pointer-events:none}
+.menu[hidden],.viewer[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){.decor-knob,.switch-label,.on-img{transition-duration:.01s}}
+
+/* 文化祭展示トップ: 参考画像に合わせた 16:9 専用レイアウト */
+.screen{container-type:size;background:#2f3540}
+.screen:before{display:none}
+.menu{display:block;position:absolute;inset:0;padding:0;gap:0;background:
+ radial-gradient(ellipse at 49% 38%,rgba(255,255,255,.045),transparent 60%),
+ repeating-linear-gradient(24deg,rgba(255,255,255,.012) 0px,rgba(255,255,255,.012) 1px,transparent 2px,transparent 5px),
+ linear-gradient(125deg,#303744,#292e38 52%,#343a46);}
+.grade-layout{position:absolute;inset:0;z-index:2;pointer-events:none}
+.grade-card{position:absolute;width:25%;height:31%;padding:0;display:block;min-height:0;border:0;box-shadow:none;background:none;border-radius:0;pointer-events:none}
+.grade-card:nth-child(1){left:6.6%;top:4.8%}
+.grade-card:nth-child(2){left:37.8%;top:4.8%}
+.grade-card:nth-child(3){left:68.6%;top:4.8%}
+.grade-card:nth-child(4){left:6.6%;top:66.8%}
+.grade-card:nth-child(5){left:37.8%;top:66.8%}
+.grade-card:nth-child(6){left:68.6%;top:66.8%}
+.grade-head,.grade-card:nth-child(2) .grade-head,.grade-card:nth-child(3) .grade-head,.grade-card:nth-child(5) .grade-head,.grade-card:nth-child(6) .grade-head{
+ width:100%;height:32%;padding:0;display:flex;align-items:center;justify-content:center;
+ background:#dedede;color:#050505;border:1px solid #132f63;border-radius:1cqw;
+ box-shadow:none;margin:0;font-size:4.6cqw;font-weight:900;line-height:1;
+}
+.names{position:relative;top:8%;width:112%;left:-6%;height:60%;display:flex;justify-content:center;align-content:flex-start;align-items:flex-start;flex-wrap:wrap;column-gap:1.35cqw;row-gap:1.05cqh;pointer-events:none}
+.student,.grade-card:nth-child(3) .student,.grade-card:nth-child(6) .student{
+ display:inline-block;border:0;background:none;box-shadow:none;border-radius:.35cqw;
+ padding:0 .25cqw;min-width:0;margin:0;color:#fff;text-shadow:none;
+ font-size:3.55cqw;font-weight:500;line-height:1.25;white-space:nowrap;pointer-events:auto;
+}
+.student:hover,.student:focus-visible{background:rgba(255,255,255,.16);transform:none;outline-color:#fbe75e}
+.grade-card:nth-child(3) .names,.grade-card:nth-child(6) .names{width:121%;left:-10.5%;column-gap:1.1cqw}
+.grade-card:nth-child(3) .student,.grade-card:nth-child(6) .student{font-size:3.23cqw}
+.hero-layout{position:absolute;left:8%;top:37%;width:86%;height:23%;z-index:1;display:flex;align-items:center;gap:3.1%}
+.header-switch{width:34%;height:85%;max-height:none;filter:drop-shadow(0 .5cqh .35cqh #0003);flex:none}
+.switch-track{border-width:.85cqw;box-shadow:0 .75cqh 0 #8c9097,inset 0 .18cqw 0 #ffffff88,inset 0 -.18cqw .35cqw #00000020}
+.header-switch .switch-label{font-size:5.4cqw;font-weight:1000;letter-spacing:-.03em;text-shadow:0 .15cqw .15cqw #0002}
+.header-switch .label-left{left:21%}.header-switch .label-right{right:14%}
+.header-switch .decor-knob{box-shadow:0 0 0 .23cqw #a2a7ad,0 .18cqw .35cqw #2d3349}
+.exhibit-title{margin:0;padding:0;color:#fff;font-size:5.3cqw;font-weight:1000;letter-spacing:-.035em;line-height:1.18;white-space:nowrap;text-shadow:none}
+/* 作品画面のスイッチは変更しない */
+.work-toggle .switch-track{border-width:.55vw}
+
+/* ゲームメニューと世界観を揃えた装飾。レイアウトと作品の動作は維持 */
+.screen{background:#061a48}
+.menu{background:
+ radial-gradient(ellipse at 52% 44%,rgba(35,130,239,.45),transparent 58%),
+ radial-gradient(circle at 1% 85%,rgba(0,197,242,.24),transparent 32%),
+ radial-gradient(circle at 99% 15%,rgba(163,76,255,.25),transparent 35%),
+ linear-gradient(135deg,#051332 0%,#07519a 48%,#061947 100%)}
+.menu:before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.9;
+ background:
+ radial-gradient(circle at 4% 14%,#fff9ca 0 .15cqw,transparent .19cqw),
+ radial-gradient(circle at 25% 47%,#ffe667 0 .12cqw,transparent .16cqw),
+ radial-gradient(circle at 51% 4%,#fff 0 .15cqw,transparent .20cqw),
+ radial-gradient(circle at 91% 36%,#ffec83 0 .13cqw,transparent .19cqw),
+ radial-gradient(circle at 77% 95%,#fff 0 .12cqw,transparent .17cqw),
+ radial-gradient(circle at 18% 90%,#ffec83 0 .12cqw,transparent .16cqw),
+ radial-gradient(circle at 67% 60%,#fff 0 .095cqw,transparent .14cqw);
+ filter:drop-shadow(0 0 .55cqw #fff9b4)}
+.menu:after{content:'';position:absolute;inset:1.1%;border:1px solid #7cc7ff35;border-radius:1.3cqw;box-shadow:inset 0 0 2.5cqw #45aafa20;pointer-events:none}
+.grade-layout{z-index:3}
+.grade-card{height:30%;border:.17cqw solid var(--accent);border-radius:1.25cqw;
+ background:linear-gradient(153deg,color-mix(in srgb,var(--accent) 22%,#08346c 78%),#061c4adc 75%);
+ box-shadow:0 0 1.2cqw color-mix(in srgb,var(--accent) 35%,transparent),inset 0 1px 0 #ffffff50;
+ padding:.65cqw .65cqw .35cqw;}
+.grade-card:nth-child(1){--accent:#ffcd49;top:3.8%;}
+.grade-card:nth-child(2){--accent:#69def7;top:3.8%;}
+.grade-card:nth-child(3){--accent:#f398ec;top:3.8%;}
+.grade-card:nth-child(4){--accent:#78e7aa;top:66.6%;}
+.grade-card:nth-child(5){--accent:#ffa66a;top:66.6%;}
+.grade-card:nth-child(6){--accent:#b59aff;top:66.6%;}
+.grade-head,.grade-card:nth-child(2) .grade-head,.grade-card:nth-child(3) .grade-head,.grade-card:nth-child(5) .grade-head,.grade-card:nth-child(6) .grade-head{
+ height:32%;border:0;border-radius:.8cqw;
+ background:linear-gradient(175deg,color-mix(in srgb,var(--accent) 60%,#fff 40%),var(--accent));
+ color:#10204a;font-family:'Arial Rounded MT Bold','Yu Gothic','Meiryo',system-ui,sans-serif;
+ font-size:4.25cqw;font-weight:1000;text-shadow:0 .08cqw #ffffff99;
+ box-shadow:inset 0 .15cqw .2cqw #fff8,0 .25cqw 0 color-mix(in srgb,var(--accent) 55%,#152645 45%),0 .4cqw .5cqw #0008;}
+.names{top:10%;width:110%;left:-5%;height:57%;gap:1.1cqh .6cqw;align-items:flex-start;align-content:center}
+.student,.grade-card:nth-child(3) .student,.grade-card:nth-child(6) .student{
+ font-family:'Arial Rounded MT Bold','Yu Gothic','Meiryo',system-ui,sans-serif;
+ font-weight:1000;font-size:3.25cqw;line-height:1.2;
+ color:#fff;text-shadow:0 .18cqw .1cqw #00143b;
+ background:#ffffff16;border:.12cqw solid #ffffff45;
+ border-radius:.6cqw;padding:.21cqh .4cqw;
+ box-shadow:inset 0 1px 0 #fff4,0 .2cqw .38cqw #0006;
+ transition:background .15s ease,transform .15s ease}
+.grade-card:nth-child(3) .student,.grade-card:nth-child(6) .student{font-size:2.93cqw;padding:.15cqh .32cqw}
+.student:hover,.student:focus-visible{background:color-mix(in srgb,var(--accent) 50%,#124a94 50%);transform:translateY(-.2cqh)}
+.hero-layout{top:38.2%;height:22%;z-index:2;gap:3%}
+.header-switch{width:34%;height:88%;filter:drop-shadow(0 .65cqh .6cqh #000b) drop-shadow(0 0 1.1cqw #60c7ff70)}
+.exhibit-title{
+ font-family:'Arial Rounded MT Bold','Yu Gothic','Hiragino Kaku Gothic ProN','Meiryo',system-ui,sans-serif;
+ font-size:5.15cqw;font-weight:1000;letter-spacing:-.055em;line-height:1.15;
+ color:#fff;filter:drop-shadow(0 .2cqw .05cqw #08245c);
+ text-shadow:.13cqw .13cqw 0 #0c4a9b,-.085cqw -.085cqw 0 #8bdfff,0 0 .85cqw #63aaff;}
+.header-switch .switch-label{font-family:'Arial Rounded MT Bold','Yu Gothic','Meiryo',system-ui,sans-serif;font-weight:1000;font-size:5.8cqw;letter-spacing:-.035em}
+/* 3年生・6年生は必ず3名＋2名の二段配置。枠からはみ出させない */
+.grade-card:nth-child(3) .names,.grade-card:nth-child(6) .names{
+ width:100%;left:0;top:7%;height:58%;
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+ grid-auto-rows:minmax(0,1fr);column-gap:.26cqw;row-gap:.55cqh;
+ align-items:center;align-content:center;justify-items:stretch;
+}
+.grade-card:nth-child(3) .student,.grade-card:nth-child(6) .student{
+ grid-column:span 2;width:100%;min-width:0;max-width:100%;
+ font-size:2.48cqw;line-height:1.15;padding:.2cqh .08cqw;
+ overflow:hidden;text-overflow:clip;text-align:center;
+}
+.grade-card:nth-child(3) .student:nth-child(4),
+.grade-card:nth-child(6) .student:nth-child(4){grid-column:2 / span 2}
+.grade-card:nth-child(3) .student:nth-child(5),
+.grade-card:nth-child(6) .student:nth-child(5){grid-column:4 / span 2}
+/* ゲームメニュー①に似せた、厚みのある白いポップ書体 */
+.exhibit-title{
+ font-family:'HGP創英角ﾎﾟｯﾌﾟ体','Arial Rounded MT Bold','UD Digi Kyokasho NK-B','Yu Gothic','Meiryo',sans-serif;
+ font-weight:900;font-size:4.92cqw;letter-spacing:.072em;line-height:1.21;
+ -webkit-text-stroke:.075cqw #faffff;
+ paint-order:stroke fill;
+ text-shadow:.09cqw .11cqw 0 #173e8a,.19cqw .23cqw 0 #0a2254,0 0 .6cqw #78bcff;
+ filter:none;
+}
+
+.grade-card:nth-child(3) .student:hover,.grade-card:nth-child(3) .student:focus-visible,
+.grade-card:nth-child(6) .student:hover,.grade-card:nth-child(6) .student:focus-visible{
+ background:color-mix(in srgb,var(--accent) 55%,#124a94 45%) !important;
+ transform:translateY(-.2cqh);
+}
+
+
+/* 作品の邪魔をしないステージ風の光：画像・追加テキストなし */
+.menu{isolation:isolate;background:
+ radial-gradient(ellipse at 47% 51%,#1b69c1 0%,rgba(17,90,186,.84) 26%,transparent 58%),
+ radial-gradient(ellipse at 0% 47%,rgba(0,221,255,.43),transparent 40%),
+ radial-gradient(ellipse at 100% 48%,rgba(138,74,255,.42),transparent 42%),
+ radial-gradient(circle at 13% 2%,rgba(255,185,48,.27),transparent 29%),
+ radial-gradient(circle at 90% 96%,rgba(255,67,166,.25),transparent 28%),
+ linear-gradient(125deg,#04102f 0%,#064481 47%,#081344 100%)}
+.backdrop-art{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.backdrop-art::before{content:'';position:absolute;inset:-35%;
+ background:repeating-conic-gradient(from -10deg at 50% 49%,rgba(140,225,255,.13) 0deg 5deg,transparent 5deg 18deg,rgba(252,223,114,.06) 18deg 21deg,transparent 21deg 36deg);
+ -webkit-mask-image:radial-gradient(ellipse at center,transparent 0%,#000 32%,#000 66%,transparent 82%);
+ mask-image:radial-gradient(ellipse at center,transparent 0%,#000 32%,#000 66%,transparent 82%);
+ filter:blur(.28cqw);opacity:.82}
+.backdrop-art::after{content:'';position:absolute;inset:0;background:
+ radial-gradient(circle at 2.5% 32%,#ffeb79 0 .25cqw,transparent .37cqw),
+ radial-gradient(circle at 97% 62%,#fff 0 .26cqw,transparent .37cqw),
+ radial-gradient(circle at 33% 62%,#7de9ff 0 .19cqw,transparent .29cqw),
+ radial-gradient(circle at 64% 33%,#ffe169 0 .18cqw,transparent .3cqw),
+ radial-gradient(circle at 94% 3%,#f8a9ff 0 .22cqw,transparent .36cqw),
+ radial-gradient(circle at 5% 96%,#9deeff 0 .21cqw,transparent .34cqw),
+ radial-gradient(circle at 47% 64%,#fff 0 .1cqw,transparent .2cqw);
+ filter:drop-shadow(0 0 .58cqw #c8f3ff);opacity:.9}
+.light-orbit{position:absolute;pointer-events:none;border:1.05cqw solid rgba(100,225,255,.15);border-radius:50%;box-shadow:0 0 2.6cqw #28c4ff36,inset 0 0 2.5cqw #7eeaff25}
+.light-orbit.one{width:28cqw;height:28cqw;left:-18cqw;top:22cqh;transform:rotate(-24deg)}
+.light-orbit.two{width:31cqw;height:31cqw;right:-21cqw;top:27cqh;border-color:rgba(242,119,255,.2);box-shadow:0 0 2.5cqw #c048ff55,inset 0 0 2.5cqw #c048ff2a}
+.light-streak{position:absolute;height:.32cqh;border-radius:100%;background:linear-gradient(90deg,transparent,#f9fcffbb,transparent);box-shadow:0 0 .9cqw #40daff8a;opacity:.55;transform:rotate(-22deg)}
+.light-streak.a{width:27cqw;left:-8cqw;top:47cqh}.light-streak.b{width:18cqw;right:-4cqw;top:40cqh;transform:rotate(18deg)}
+.light-streak.c{width:15cqw;left:40cqw;top:66cqh;opacity:.3}
+.grade-layout{z-index:3}.hero-layout{z-index:3}
+
+/* 作品画面は従来のまま */
+</style></head><body><div class="stage"><main class="screen"><section class="menu" id="menu">
+<div class="backdrop-art" aria-hidden="true"><i class="light-orbit one"></i><i class="light-orbit two"></i><i class="light-streak a"></i><i class="light-streak b"></i><i class="light-streak c"></i></div>
+<div class="grade-layout" id="grades"></div>
+<div class="hero-layout">
+  <div class="header-switch" aria-hidden="true"><div class="switch-track" id="heroSwitch"><span class="switch-label label-left">ON</span><span class="switch-label label-right">OFF</span><span class="decor-knob"></span></div></div>
+  <h1 class="exhibit-title">かっこいい<br>スイッチを作ったよ!</h1>
+</div>
+</section><section class="viewer" id="viewer" hidden><div class="art"><img id="offImage" alt="OFFの作品画像"><img id="onImage" class="on-img" alt="ONの作品画像"></div><button class="back" type="button" id="back">← 作品一覧へ</button><button type="button" class="work-toggle" id="workSwitch" aria-label="スイッチをONにする"><span class="switch-track" id="workSwitchTrack"><span class="switch-label label-left">ON</span><span class="switch-label label-right">OFF</span><span class="decor-knob"></span></span></button></section></main></div><script>
+'use strict';
+const heroSwitch=document.getElementById('heroSwitch');
+const workTrack=document.getElementById('workSwitchTrack');
+const sw=document.getElementById('workSwitch');
+// 実寸法でつまみの直径と左右の移動量を設定（パーセント指定による楕円・移動不足を解消）
+function sizeSwitch(track){
+  const w=track.clientWidth, h=track.clientHeight;
+  if(!w||!h)return;
+  const pad=Math.max(3,Math.round(h*.055));
+  const diameter=Math.max(1,h-2*pad);
+  const travel=Math.max(0,w-2*pad-diameter);
+  track.style.setProperty('--inset',pad+'px');
+  track.style.setProperty('--knob-size',diameter+'px');
+  track.style.setProperty('--travel',travel+'px');
+}
+const resizeObserver=new ResizeObserver(()=>{
+  sizeSwitch(heroSwitch);
+  sizeSwitch(workTrack);
+});
+resizeObserver.observe(heroSwitch);
+resizeObserver.observe(workTrack);
+sizeSwitch(heroSwitch);
+
+// 押してから2秒移動し、到着した時点で表示文字を切り替える。
+function moveSwitch(track,on,afterMove){
+  const wasOn=track.classList.contains('auto-on');
+  if(wasOn===on){track.classList.remove('moving');afterMove?.();return;}
+  track.classList.add('moving');
+  track.classList.toggle('auto-on',on);
+  const knob=track.querySelector('.decor-knob');
+  const ended=e=>{
+    if(e.target!==knob||e.propertyName!=='transform')return;
+    knob.removeEventListener('transitionend',ended);
+    track.classList.remove('moving');
+    afterMove?.();
+  };
+  knob.addEventListener('transitionend',ended);
+}
+let heroOn=false, heroBusy=false;
+function cycleHero(){
+ if(heroBusy)return;
+ heroBusy=true;heroOn=!heroOn;
+ moveSwitch(heroSwitch,heroOn,()=>{heroBusy=false;});
+}
+// 2秒移動 + 1.4秒停止。その後、逆方向へ
+setInterval(cycleHero,3400);
+
+const students=[
+ {g:1,name:'有留',dir:'aridome_1nen'},{g:1,name:'武田',dir:'takeda_1nen'},{g:1,name:'三浦',dir:'miura_1nen'},
+ {g:2,name:'井阪',dir:'isaka_2nen'},
+ {g:3,name:'秋月',dir:'akitsuki_3nen'},{g:3,name:'麻',dir:'asa_3nen'},{g:3,name:'小谷',dir:'kotani_3nen'},{g:3,name:'眞保',dir:'sanayasu_3nen'},{g:3,name:'竹元',dir:'takemoto_3nen'},
+ {g:4,name:'松浦',dir:'matsuura_4nen'},
+ {g:5,name:'田原',dir:'tahara_5nen'},{g:5,name:'山本',dir:'yamamoto_5nen'},
+ {g:6,name:'麻',dir:'asa_6nen'},{g:6,name:'石原',dir:'ishihara_6nen'},{g:6,name:'柏木',dir:'kashiwagi_6nen'},{g:6,name:'小関',dir:'koseki_6nen'},{g:6,name:'長田',dir:'nagata_6nen'}
+];
+const grades=document.getElementById('grades'),menu=document.getElementById('menu'),viewer=document.getElementById('viewer'),offImage=document.getElementById('offImage'),onImage=document.getElementById('onImage');
+for(let g=1;g<=6;g++){
+  const card=document.createElement('section');card.className='grade-card';
+  const h=document.createElement('div');h.className='grade-head';h.textContent=`${g}年生`;card.appendChild(h);
+  const names=document.createElement('div');names.className='names';
+  for(const s of students.filter(x=>x.g===g)){
+    const b=document.createElement('button');b.className='student';b.type='button';b.textContent=s.name;
+    b.setAttribute('aria-label',`${g}年生 ${s.name}さんの作品を見る`);
+    b.addEventListener('click',()=>openWork(s));
+    names.appendChild(b)
+  }
+  card.appendChild(names);grades.appendChild(card)
+}
+let isOn=false,workBusy=false;
+function setSwitch(value,immediate=false){
+  if(workBusy&&!immediate)return;
+  isOn=value;
+  viewer.classList.toggle('on',isOn);
+  sw.setAttribute('aria-label',isOn?'スイッチをOFFにする':'スイッチをONにする');
+  if(immediate){
+    workBusy=false;
+    workTrack.classList.add('no-animation');
+    workTrack.classList.remove('moving');
+    workTrack.classList.toggle('auto-on',isOn);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>workTrack.classList.remove('no-animation')));
+  }else{
+    workBusy=true;
+    moveSwitch(workTrack,isOn,()=>{workBusy=false;});
+  }
+}
+function openWork(s){
+  offImage.src=`images/${s.dir}/off.png`;
+  onImage.src=`images/${s.dir}/on.png`;
+  setSwitch(false,true);
+  menu.hidden=true;viewer.hidden=false;viewer.classList.add('active');sizeSwitch(workTrack);
+  history.replaceState(null,'','#'+s.dir)
+}
+function backToMenu(){
+  viewer.classList.remove('active');viewer.hidden=true;menu.hidden=false;setSwitch(false,true);
+  offImage.removeAttribute('src');onImage.removeAttribute('src');
+  history.replaceState(null,'',location.pathname+location.search)
+}
+sw.addEventListener('click',()=>{if(!workBusy)setSwitch(!isOn)});
+document.getElementById('back').addEventListener('click',backToMenu);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!viewer.hidden)backToMenu();else if((e.key===' '||e.key==='Enter')&&!viewer.hidden&&e.target===document.body){e.preventDefault();setSwitch(!isOn)}});
+</script></body></html>
