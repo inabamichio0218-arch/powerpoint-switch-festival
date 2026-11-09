@@ -206,6 +206,21 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:4px solid #ffde5
 .grade-layout{z-index:3}.hero-layout{z-index:3}
 
 /* 作品画面は従来のまま */
+
+/* 作品表示用: スイッチ本体を直接 button にする。透明な入れ子は廃止。 */
+.viewer .work-toggle.switch-track{
+ display:block;position:absolute;right:3.2%;top:3%;width:28%;height:12%;
+ border:.55vw solid #fafbff;border-radius:999px;
+ padding:0;overflow:hidden;isolation:isolate;
+ background:linear-gradient(180deg,#f34a58,#e33f4d);
+ box-shadow:0 .45vw .8vw #0009,inset 0 .14vw 0 #ffffff88,inset 0 -.18vw .35vw #0002;
+ transition:background 2s ease-in-out;
+}
+.viewer .work-toggle.switch-track.auto-on{
+ background:linear-gradient(180deg,#5ccc8d,#41ba79);
+}
+.viewer .work-toggle .switch-label{z-index:1;pointer-events:none}
+.viewer .work-toggle .decor-knob{z-index:2;pointer-events:none}
 </style></head><body><div class="stage"><main class="screen"><section class="menu" id="menu">
 <div class="backdrop-art" aria-hidden="true"><i class="light-orbit one"></i><i class="light-orbit two"></i><i class="light-streak a"></i><i class="light-streak b"></i><i class="light-streak c"></i></div>
 <div class="grade-layout" id="grades"></div>
@@ -213,10 +228,10 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:4px solid #ffde5
   <div class="header-switch" aria-hidden="true"><div class="switch-track" id="heroSwitch"><span class="switch-label label-left">ON</span><span class="switch-label label-right">OFF</span><span class="decor-knob"></span></div></div>
   <h1 class="exhibit-title">かっこいい<br>スイッチを作ったよ!</h1>
 </div>
-</section><section class="viewer" id="viewer" hidden><div class="art"><img id="offImage" alt="OFFの作品画像"><img id="onImage" class="on-img" alt="ONの作品画像"></div><button class="back" type="button" id="back">← 作品一覧へ</button><button type="button" class="work-toggle" id="workSwitch" aria-label="スイッチをONにする"><span class="switch-track" id="workSwitchTrack"><span class="switch-label label-left">ON</span><span class="switch-label label-right">OFF</span><span class="decor-knob"></span></span></button></section></main></div><script>
+</section><section class="viewer" id="viewer" hidden><div class="art"><img id="offImage" alt="OFFの作品画像"><img id="onImage" class="on-img" alt="ONの作品画像"></div><button class="back" type="button" id="back">← 作品一覧へ</button><button type="button" class="work-toggle switch-track" id="workSwitch" aria-label="スイッチをONにする"><span class="switch-label label-left">ON</span><span class="switch-label label-right">OFF</span><span class="decor-knob"></span></button></section></main></div><script>
 'use strict';
 const heroSwitch=document.getElementById('heroSwitch');
-const workTrack=document.getElementById('workSwitchTrack');
+const workTrack=document.getElementById('workSwitch');
 const sw=document.getElementById('workSwitch');
 // 実寸法でつまみの直径と左右の移動量を設定（パーセント指定による楕円・移動不足を解消）
 function sizeSwitch(track){
