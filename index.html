@@ -259,13 +259,21 @@ function moveSwitch(track,on,afterMove){
   track.classList.add('moving');
   track.classList.toggle('auto-on',on);
   const knob=track.querySelector('.decor-knob');
-  const ended=e=>{
-    if(e.target!==knob||e.propertyName!=='transform')return;
+  let completed=false;
+  // 非表示中は transitionend が発火しないことがあるため、時間でも完了を保証する。
+  const finish=()=>{
+    if(completed)return;
+    completed=true;
+    clearTimeout(fallback);
     knob.removeEventListener('transitionend',ended);
     track.classList.remove('moving');
     afterMove?.();
   };
+  const ended=e=>{
+    if(e.target===knob && e.propertyName==='transform')finish();
+  };
   knob.addEventListener('transitionend',ended);
+  const fallback=setTimeout(finish,2050);
 }
 let heroOn=false, heroBusy=false;
 function cycleHero(){
@@ -325,7 +333,8 @@ function openWork(s){
 function backToMenu(){
   viewer.classList.remove('active');viewer.hidden=true;menu.hidden=false;setSwitch(false,true);
   offImage.removeAttribute('src');onImage.removeAttribute('src');
-  history.replaceState(null,'',location.pathname+location.search)
+  history.replaceState(null,'',location.pathname+location.search);
+  if(!heroBusy)cycleHero();
 }
 sw.addEventListener('click',()=>{if(!workBusy)setSwitch(!isOn)});
 document.getElementById('back').addEventListener('click',backToMenu);
